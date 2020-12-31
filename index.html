@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <body style="margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background-color: gray">
+    <div style="text-align: center; white-space: pre-line" id="data"></div>
+    <script id="worker" type="javascript/worker">
+      self.onmessage = function() {
+        const percentChance = 4.7;
+        const bartersPerIteration = 262;      
+        const iterationsPerBatch = Math.floor(Math.random() * 1000) + 5000; // I use random just so the tries counter looks more random :)
+        const chance = percentChance / 100;
+
+        iterationBatchLoop();
+        function iterationBatchLoop() {
+          let bestResultInBatch = 0;
+          for (let i = 0; i < iterationsPerBatch; i++) {
+          const result = iteration();
+          bestResultInBatch = Math.max(result, bestResultInBatch);
+          }
+          self.postMessage({ bestResultInBatch: bestResultInBatch, iterations: iterationsPerBatch });
+          setTimeout(() => iterationBatchLoop(), 0); // Firefox would terminate a worker without a timeout
+        }
+
+        function iteration() {
+          let tradesInIteration = 0;
+          for (let i = 0; i < bartersPerIteration; i++) {
+          if (Math.random() <= chance) {
+            tradesInIteration++;
+          }
+          }
+          return tradesInIteration;
+        }
+      };
+    </script>
+    <script>
+    
+      const targetDrops = 42; // How many drops we need to get until we stop the simulation
+      const playingHoursPerDay = 8; // How many hours per day a speedrunner plays
+      const iterationLengthInHours = 24; // How much time an iteration takes (iteration = 263 barters in multiple speedruns)
+      const speedrunners = 1000000; // How many speedrunners we simluate
+      const bartersPerIteration = 263;
+    
+      // Setup for workers, so we use multiple cores
+      const workerBlob = new Blob([document.querySelector('#worker').textContent], { type: "text/javascript" }); 
+      const workerURL = window.URL.createObjectURL(workerBlob);
+      const workerCount = 32;
+      const workers = [];
+      
+      const hoursInYear = 24 * 365;
+      let mostTradesEver = 0;
+      let totalIterations = 0;
+      let updateIntervalId;
+      
+      function yearsPerSpeedrunnersSoFar() {
+        const realTimeHours = totalIterations * iterationLengthInHours;
+        const hoursWithRest = realTimeHours * (24 / playingHoursPerDay);
+        const yearsWithRest = hoursWithRest / hoursInYear;
+        const yearsWithRestPerSpeedrunner = yearsWithRest / speedrunners;
+        return Number(yearsWithRestPerSpeedrunner.toFixed(2));
+      }
+      
+      function formatNumber(x) {
+        return x.toLocaleString();
+      }
+      
+      function updateText() {
+        document.querySelector('#data').innerHTML = `Best is ${mostTradesEver} pearl trades after ${formatNumber(totalIterations)} tries (${formatNumber(totalIterations * bartersPerIteration)} barters). 
+        So far I simulated ${formatNumber(speedrunners)} speedrunners playing the game ${playingHoursPerDay} hours per day for ${formatNumber(yearsPerSpeedrunnersSoFar())} years each.`;
+      }
+      
+      function setSuccessText() {
+        document.querySelector('#data').innerHTML = `🎉🎉🎉 It happend! 🎉🎉🎉
+        Someone had ${mostTradesEver} pearl trades after ${formatNumber(totalIterations)} tries (${formatNumber(totalIterations * bartersPerIteration)} barters). 
+        To get this result I simulated ${formatNumber(speedrunners)} speedrunners playing the game ${playingHoursPerDay} hours per day for ${formatNumber(yearsPerSpeedrunnersSoFar())} years each.`;
+      }
+      
+      function onWorkerMessage(message) {
+        mostTradesEver = Math.max(message.data.bestResultInBatch, mostTradesEver);
+        totalIterations += message.data.iterations;
+        if (mostTradesEver >= targetDrops) {
+          onFinish();
+        }
+      }
+      
+      function onFinish() {
+        workers.forEach(worker => worker.terminate());
+        clearInterval(updateIntervalId);
+        setSuccessText();
+      }
+      
+      for(let i = 0; i < workerCount; i++) {
+        const worker = new Worker(workerURL);
+        workers.push(worker);
+        worker.onmessage = onWorkerMessage;
+        worker.postMessage("Go!");
+      }
+      
+      updateText();
+      updateIntervalId = setInterval(() => updateText(), 10);
+    </script>
+  </body>
+</html>
+
