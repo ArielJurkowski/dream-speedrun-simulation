@@ -35,9 +35,9 @@
     <script>
       const targetDrops = 42; // How many drops we need to get until we stop the simulation
       const playingHoursPerDay = 8; // How many hours per day a speedrunner plays
-      const iterationLengthInHours = 24; // How much time an iteration takes (iteration = 263 barters in multiple speedruns)
+      const iterationLengthInHours = 24; // How much time an iteration takes (iteration = 262 barters in multiple speedruns)
       const speedrunners = 1000000; // How many speedrunners we simluate
-      const bartersPerIteration = 263;
+      const bartersPerIteration = 262;
     
       // Setup for workers, so we use multiple cores
       const workerBlob = new Blob([document.querySelector('#worker').textContent], { type: "text/javascript" }); 
