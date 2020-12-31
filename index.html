@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
-  <body style="margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background-color: gray">
+  <body style="margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background-color: gray; flex-direction: colummn">
     <div style="text-align: center; white-space: pre-line" id="data"></div>
-    <p><a href="https://github.com/ArielJurkowski/dream-speedrun-simulation/blob/main/index.html">Source code!</a></p>
+	<p><a href="https://github.com/ArielJurkowski/dream-speedrun-simulation/blob/main/index.html">Source code!</a></p>
     <script id="worker" type="javascript/worker">
       self.onmessage = function() {
         const percentChance = 4.7;
@@ -14,8 +14,8 @@
         function iterationBatchLoop() {
           let bestResultInBatch = 0;
           for (let i = 0; i < iterationsPerBatch; i++) {
-          const result = iteration();
-          bestResultInBatch = Math.max(result, bestResultInBatch);
+            const result = iteration();
+            bestResultInBatch = Math.max(result, bestResultInBatch);
           }
           self.postMessage({ bestResultInBatch: bestResultInBatch, iterations: iterationsPerBatch });
           setTimeout(() => iterationBatchLoop(), 0); // Firefox would terminate a worker without a timeout
@@ -24,16 +24,15 @@
         function iteration() {
           let tradesInIteration = 0;
           for (let i = 0; i < bartersPerIteration; i++) {
-          if (Math.random() <= chance) {
-            tradesInIteration++;
-          }
+			if (Math.random() <= chance) {
+			  tradesInIteration++;
+			}
           }
           return tradesInIteration;
         }
       };
     </script>
     <script>
-    
       const targetDrops = 42; // How many drops we need to get until we stop the simulation
       const playingHoursPerDay = 8; // How many hours per day a speedrunner plays
       const iterationLengthInHours = 24; // How much time an iteration takes (iteration = 263 barters in multiple speedruns)
@@ -100,4 +99,3 @@
     </script>
   </body>
 </html>
-
